@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login - Pluma</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #062b57, #0e7a67);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-shell {
+      width: 100%;
+      max-width: 1100px;
+      min-height: 600px;
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+
+    .left {
+      background: linear-gradient(180deg, #0e7a67, #12345a);
+      color: #fff;
+      padding: 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .logo {
+      width: 130px;
+      height: 130px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 25px;
+    }
+
+    .logo img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .title-left {
+      font-size: 2.8rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .desc {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    .right {
+      padding: 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: #f4f6f8;
+    }
+
+    .title-login {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #062b57;
+      margin-bottom: 10px;
+    }
+
+    .form-control {
+      height: 55px;
+      border-radius: 12px;
+      background: #e8eef6;
+      border: none;
+    }
+
+    .btn-login {
+      height: 55px;
+      border-radius: 12px;
+      background: #0e7a67;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      margin-top: 10px;
+    }
+
+    .btn-login:hover {
+      background: #0c6a5a;
+    }
+
+    #erro {
+      color: red;
+      margin-top: 10px;
+      font-weight: bold;
+      min-height: 20px;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .login-shell {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div class="login-shell">
+  <div class="left">
+    <div class="logo">
+      <img src="logo-conecta.png" alt="Pluma">
+    </div>
+
+    <div class="title-left">Dashboard ORACLE</div>
+
+    <div class="desc">
+      Acesse o painel interno do Programa Conecta para consultar dados e indicadores.
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="title-login">Entrar</div>
+
+    <form id="formLogin" autocomplete="off">
+      <label for="user" class="mb-2">Usuário</label>
+      <input id="user" name="user_fake_pluma" class="form-control mb-3" autocomplete="off">
+
+      <label for="pass" class="mb-2">Senha</label>
+      <input id="pass" name="pass_fake_pluma" type="password" class="form-control mb-3" autocomplete="new-password">
+
+      <button type="submit" class="btn-login w-100">Entrar</button>
+
+      <div id="erro"></div>
+    </form>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+  limparSessao();
+
+  window.onload = function() {
+    document.getElementById("user").value = "";
+    document.getElementById("pass").value = "";
+  };
+
+  document.getElementById("formLogin").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const u = document.getElementById("user").value.trim();
+    const p = document.getElementById("pass").value.trim();
+    const erro = document.getElementById("erro");
+
+    const resultado = fazerLogin(u, p);
+
+    if (resultado.sucesso) {
+      window.location.href = "index.html";
+      return;
+    }
+
+    if (resultado.erro === "usuario") {
+      erro.innerText = "Usuário não encontrado";
+      document.getElementById("user").focus();
+    } else if (resultado.erro === "senha") {
+      erro.innerText = "Senha incorreta";
+      document.getElementById("pass").value = "";
+      document.getElementById("pass").focus();
+    } else {
+      erro.innerText = "Falha no login";
+    }
+  });
+</script>
+</body>
+</html>
