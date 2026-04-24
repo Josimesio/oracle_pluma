@@ -15,7 +15,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-<script src="auth.js"></script>
 </head>
 
 <body>
@@ -28,12 +27,7 @@
           <div class="col-md-7">
             <h1 class="mb-0">Chamados 2025 - ORACLE</h1>
             <p class="mb-0">Programa Conecta • Grupo Pluma</p>
-            <div class="pl-atualizacao" aria-label="Atualização do painel">
-  <span class="pl-dot" aria-hidden="true"></span>
-  <span class="pl-label">Atualizado</span>
-  <span class="pl-value"><span id="atualizadoEm">-</span></span>
-  <span class="pl-tz">BRT</span>
-</div>
+            <p class="mb-0 small text-white-50">⏱ Atualizado em: <span id="atualizadoEm">-</span></p>
           </div>
 
           
@@ -129,7 +123,7 @@
             <div class="col-6 col-lg-3">
               <div class="card pl-card-kpi text-center kpi-card">
                 <div class="card-body py-2">
-                  <h3 class="card-title mb-1">Total de SRs</h3>
+                  <h3 class="card-title mb-1" id="tituloKpiTotalAno">Total de SRs no ano de 2025</h3>
                   <p class="card-text kpi-valor mb-0" id="kpiTotal">...</p>
                 </div>
               </div>
@@ -138,7 +132,7 @@
             <div class="col-6 col-lg-3">
               <div class="card pl-card-kpi text-center kpi-card">
                 <div class="card-body py-2">
-                  <h3 class="card-title mb-1">SRs Abertos</h3>
+                  <h3 class="card-title mb-1" id="tituloKpiAbertosAno">SRs Abertos no ano de 2025</h3>
                   <p class="card-text kpi-valor mb-0" id="kpiAbertos">...</p>
                 </div>
               </div>
@@ -147,7 +141,7 @@
             <div class="col-6 col-lg-3">
               <div class="card pl-card-kpi text-center kpi-card">
                 <div class="card-body py-2">
-                  <h3 class="card-title mb-1">SRs Fechados</h3>
+                  <h3 class="card-title mb-1" id="tituloKpiFechadosAno">SRs Fechados no ano de 2025</h3>
                   <p class="card-text kpi-valor mb-0" id="kpiFechados">...</p>
                 </div>
               </div>

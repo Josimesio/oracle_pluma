@@ -59,6 +59,110 @@
     )).sort((a,b)=>a.localeCompare(b, "pt-BR"));
   }
 
+
+  function obterAnoDashboard() {
+    const titulo = String(document.title || "");
+    const mTitulo = titulo.match(/\b(20\d{2})\b/);
+    if (mTitulo) return mTitulo[1];
+
+    const textoPagina = document.body ? document.body.textContent : "";
+    const mPagina = String(textoPagina || "").match(/Ano\s+(20\d{2})|Chamados\s+(20\d{2})/);
+    if (mPagina) return mPagina[1] || mPagina[2];
+
+    return String(new Date().getFullYear());
+  }
+
+  function atualizarTitulosPainelAno() {
+    const ano = obterAnoDashboard();
+    const tituloTotal = document.getElementById("tituloKpiTotalAno");
+    const tituloAbertos = document.getElementById("tituloKpiAbertosAno");
+    const tituloFechados = document.getElementById("tituloKpiFechadosAno");
+
+    if (tituloTotal) tituloTotal.textContent = `Total de SRs no ano de ${ano}`;
+    if (tituloAbertos) tituloAbertos.textContent = `SRs Abertos no ano de ${ano}`;
+    if (tituloFechados) tituloFechados.textContent = `SRs Fechados no ano de ${ano}`;
+  }
+
+  // ===== Datas flexíveis do Oracle / CSV
+  function parseDataRelativa(valor, baseRef) {
+    const m = String(valor || "").trim()
+      .match(/^(Today|Yesterday)\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!m) return null;
+
+    const base = baseRef ? new Date(baseRef) : new Date();
+    if (isNaN(base)) return null;
+
+    if (/yesterday/i.test(m[1])) base.setDate(base.getDate() - 1);
+
+    let hh = parseInt(m[2], 10);
+    const mm = parseInt(m[3], 10);
+    const ap = String(m[4] || "").toUpperCase();
+
+    if (ap === "PM" && hh < 12) hh += 12;
+    if (ap === "AM" && hh === 12) hh = 0;
+
+    base.setHours(hh, mm, 0, 0);
+    return base;
+  }
+
+  function parseDataFlex(valor) {
+    if (!valor) return null;
+    let s = String(valor).trim().replace(/^"|"$/g, "").trim();
+    if (!s) return null;
+
+    const dRel = parseDataRelativa(s, window.__GERADO_EM_REF__);
+    if (dRel) return dRel;
+
+    if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(s)) s = s.replace(" ", "T");
+
+    let d = new Date(s);
+    if (!isNaN(d)) return d;
+
+    const mBr = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (mBr) {
+      const dia = parseInt(mBr[1], 10);
+      const mes = parseInt(mBr[2], 10) - 1;
+      let ano = parseInt(mBr[3], 10);
+      if (ano < 100) ano += 2000;
+      const hh = parseInt(mBr[4] || "0", 10);
+      const mm = parseInt(mBr[5] || "0", 10);
+      const ss = parseInt(mBr[6] || "0", 10);
+      d = new Date(ano, mes, dia, hh, mm, ss);
+      if (!isNaN(d)) return d;
+    }
+
+    const mEng = s.match(/^([A-Za-z]{3})\s+(\d{1,2})(?:,)?\s+(\d{4})(?:\s+(\d{1,2}):(\d{2})\s*(AM|PM)?)?$/);
+    if (mEng) {
+      const mesesEng = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+      const mon = mesesEng[mEng[1]];
+      if (mon !== undefined) {
+        let hh = parseInt(mEng[4] || "0", 10);
+        const mm = parseInt(mEng[5] || "0", 10);
+        const ap = String(mEng[6] || "").toUpperCase();
+        if (ap === "PM" && hh < 12) hh += 12;
+        if (ap === "AM" && hh === 12) hh = 0;
+        d = new Date(parseInt(mEng[3], 10), mon, parseInt(mEng[2], 10), hh, mm, 0);
+        if (!isNaN(d)) return d;
+      }
+    }
+
+    return null;
+  }
+
+  function isFechado(status) {
+    const st = String(status || "").toLowerCase();
+    return st.includes("closed") || st.includes("close requested") || st.includes("resolved") || st.includes("fechado");
+  }
+
+  function obterReferenciaMesAtual() {
+    const hoje = new Date();
+    return {
+      ano: hoje.getFullYear(),
+      mes: hoje.getMonth(),
+      nome: hoje.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
+    };
+  }
+
   // ===== Atualizado em: coluna "Gerado em" (padrão do dados_sr_2026.csv)
   function atualizarHeaderAtualizadoEm(dados) {
     const el = document.getElementById("atualizadoEm");
@@ -95,6 +199,7 @@
       if (v) ultimo = v;
     }
     el.textContent = ultimo || "-";
+    if (ultimo) window.__GERADO_EM_REF__ = ultimo;
   }
 
   // ===== Estado
@@ -163,10 +268,7 @@
 
     const total = (dados || []).length;
 
-    const fechados = (dados || []).filter(d => {
-      const st = String(d["Status"] || "").toLowerCase();
-      return st.includes("closed") || st.includes("close requested") || st.includes("resolved") || st.includes("fechado");
-    }).length;
+    const fechados = (dados || []).filter(d => isFechado(d["Status"])).length;
 
     totalEl.textContent = String(total);
     abertosEl.textContent = String(total - fechados);
@@ -179,6 +281,32 @@
       if (v > max) { max = v; top = k; }
     }
     topModuloEl.textContent = top;
+  }
+
+  function atualizarKPIsMesCorrente(dados) {
+    const totalEl = document.getElementById("kpiMesTotal");
+    const abertosEl = document.getElementById("kpiMesAbertos");
+    const fechadosEl = document.getElementById("kpiMesFechados");
+    const nomeEl = document.getElementById("kpiMesNome");
+    const refEl = document.getElementById("kpiMesReferencia");
+
+    if (!totalEl || !abertosEl || !fechadosEl || !nomeEl) return;
+
+    const ref = obterReferenciaMesAtual();
+    const criadosNoMes = (dados || []).filter(d => {
+      const dt = parseDataFlex(d["Criado_dt"]);
+      return dt && dt.getFullYear() === ref.ano && dt.getMonth() === ref.mes;
+    });
+
+    const fechados = criadosNoMes.filter(d => isFechado(d["Status"])).length;
+    const total = criadosNoMes.length;
+    const nome = ref.nome.charAt(0).toUpperCase() + ref.nome.slice(1);
+
+    totalEl.textContent = String(total);
+    abertosEl.textContent = String(total - fechados);
+    fechadosEl.textContent = String(fechados);
+    nomeEl.textContent = nome;
+    if (refEl) refEl.textContent = nome;
   }
 
   // ===== Tabela
@@ -203,6 +331,7 @@
     let dados = filtrarDados();
     dados = aplicarBusca(dados);
     atualizarKPIs(dados);
+    atualizarKPIsMesCorrente(dados);
     atualizarTabela(dados);
   }
 
@@ -244,6 +373,7 @@
   }
 
   async function iniciar() {
+    atualizarTitulosPainelAno();
     document.getElementById("btnTvMode")?.addEventListener("click", toggleTvMode);
     document.getElementById("filtroServico")?.addEventListener("change", atualizarPagina);
     document.getElementById("filtroStatus")?.addEventListener("change", atualizarPagina);

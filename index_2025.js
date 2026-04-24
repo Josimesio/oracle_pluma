@@ -59,6 +59,30 @@
     )).sort((a,b)=>a.localeCompare(b, "pt-BR"));
   }
 
+
+  function obterAnoDashboard() {
+    const titulo = String(document.title || "");
+    const mTitulo = titulo.match(/\b(20\d{2})\b/);
+    if (mTitulo) return mTitulo[1];
+
+    const textoPagina = document.body ? document.body.textContent : "";
+    const mPagina = String(textoPagina || "").match(/Ano\s+(20\d{2})|Chamados\s+(20\d{2})/);
+    if (mPagina) return mPagina[1] || mPagina[2];
+
+    return String(new Date().getFullYear());
+  }
+
+  function atualizarTitulosPainelAno() {
+    const ano = obterAnoDashboard();
+    const tituloTotal = document.getElementById("tituloKpiTotalAno");
+    const tituloAbertos = document.getElementById("tituloKpiAbertosAno");
+    const tituloFechados = document.getElementById("tituloKpiFechadosAno");
+
+    if (tituloTotal) tituloTotal.textContent = `Total de SRs no ano de ${ano}`;
+    if (tituloAbertos) tituloAbertos.textContent = `SRs Abertos no ano de ${ano}`;
+    if (tituloFechados) tituloFechados.textContent = `SRs Fechados no ano de ${ano}`;
+  }
+
   // ===== Atualizado em: coluna "Gerado em" (padrão do dados_sr_2025.csv)
   function atualizarHeaderAtualizadoEm(dados) {
     const el = document.getElementById("atualizadoEm");
@@ -244,6 +268,7 @@
   }
 
   async function iniciar() {
+    atualizarTitulosPainelAno();
     document.getElementById("btnTvMode")?.addEventListener("click", toggleTvMode);
     document.getElementById("filtroServico")?.addEventListener("change", atualizarPagina);
     document.getElementById("filtroStatus")?.addEventListener("change", atualizarPagina);
